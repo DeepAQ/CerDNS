@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @AllArgsConstructor
@@ -43,7 +44,10 @@ public class ForwardTask implements Runnable {
                     Future<Message> future = futures.get(i);
                     log.info("Getting result from server " + chain.get(i).getServer());
                     try {
-                        Message respMessage = future.get();
+                        Message respMessage = future.get(Config.getTimeout(), TimeUnit.MILLISECONDS);
+                        if (respMessage == null) {
+                            continue;
+                        }
                         fallback = respMessage;
                         Record[] answer = respMessage.getSectionArray(Section.ANSWER);
                         if (answer != null) {
@@ -77,12 +81,13 @@ public class ForwardTask implements Runnable {
                 }
                 if (result == null) {
                     log.info("Null result, use fallback instead");
+                    result = fallback;
                 }
             } else {
                 log.info("Other type query, use default");
                 // Query from default server
                 Future<Message> respFuture = queryPool.submit(new QueryTask(reqMessage, Config.getDefaultServer(), Config.getTimeout()));
-                result = respFuture.get();
+                result = respFuture.get(Config.getTimeout(), TimeUnit.MILLISECONDS);
             }
             if (result != null) {
                 channel.send(ByteBuffer.wrap(result.toWire()), client);

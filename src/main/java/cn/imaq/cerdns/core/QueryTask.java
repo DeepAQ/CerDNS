@@ -20,10 +20,12 @@ public class QueryTask implements Callable<Message> {
     public Message call() {
         try {
             DatagramChannel channel = DatagramChannel.open();
+            channel.configureBlocking(true);
             channel.socket().setSoTimeout(timeout);
             channel.send(ByteBuffer.wrap(reqMessage.toWire()), server);
             ByteBuffer buf = ByteBuffer.allocate(1024);
             channel.receive(buf);
+            channel.close();
             buf.flip();
             return new Message(buf);
         } catch (Exception e) {
