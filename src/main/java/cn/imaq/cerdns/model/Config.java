@@ -1,21 +1,27 @@
 package cn.imaq.cerdns.model;
 
-import lombok.Data;
+import lombok.Getter;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Data
+@Getter
 public class Config {
-    List<Endpoint> endpoints;
+    private int timeout = 2;
 
-    Map<String, List<String>> addressLists;
+    private Server defaultServer;
 
-    class Endpoint {
-        String server;
+    private List<Server> chain;
 
-        int port = 53;
+    private Map<String, List<String>> addressLists = new HashMap<>();
 
-        String matchList;
+    @Getter
+    public class Server {
+        private String server;
+
+        private int port = 53;
+
+        private String matchList;
     }
 }

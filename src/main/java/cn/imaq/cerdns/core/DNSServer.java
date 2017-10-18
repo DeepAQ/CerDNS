@@ -1,23 +1,23 @@
-package cn.imaq.cerdns.net;
+package cn.imaq.cerdns.core;
 
-import cn.imaq.cerdns.util.Banner;
 import lombok.extern.slf4j.Slf4j;
 import org.xbill.DNS.Message;
+import org.xbill.DNS.Opcode;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Slf4j
 public class DNSServer {
-    private int port = 53;
-
+    private int port;
+    private ExecutorService forwardWorkers = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private ExecutorService queryWorkers = Executors.newCachedThreadPool();
     private volatile boolean running = false;
-
-    public DNSServer() {
-    }
 
     public DNSServer(int port) {
         this.port = port;
@@ -27,13 +27,14 @@ public class DNSServer {
         if (running) {
             return;
         }
-        Banner.print();
         // Start channel
         DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(true);
         channel.socket().bind(new InetSocketAddress(port));
         running = true;
+        // Start server thread
         new ServerThread(channel).start();
+        log.info("DNS server started");
     }
 
     public void stop() {
@@ -57,9 +58,12 @@ public class DNSServer {
                     SocketAddress src = channel.receive(buf);
                     buf.flip();
                     if (src != null) {
-                        log.info("Received packet from " + src);
+                        log.debug("Received datagram from " + src);
                         Message message = new Message(buf);
-                        log.info(String.valueOf(message));
+                        if (message.getHeader().getOpcode() == Opcode.QUERY) {
+                            // Dispatch
+                            forwardWorkers.execute(new ForwardTask(channel, src, message, queryWorkers));
+                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
