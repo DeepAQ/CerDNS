@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 @Getter
-public class Config {
+public class ConfigModel {
     private int timeout = 2000;
 
     private Server defaultServer;
