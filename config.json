@@ -1,5 +1,5 @@
 {
-  "timeout": 1,
+  "timeout": 1000,
   "defaultServer": {
     "server": "119.29.29.29",
     "port": 53

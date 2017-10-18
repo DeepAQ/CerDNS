@@ -8,7 +8,7 @@ import java.util.Map;
 
 @Getter
 public class Config {
-    private int timeout = 2;
+    private int timeout = 2000;
 
     private Server defaultServer;
 
