@@ -23,7 +23,7 @@ public class QueryTask implements Callable<Message> {
             channel.configureBlocking(true);
             channel.socket().setSoTimeout(timeout);
             channel.send(ByteBuffer.wrap(reqMessage.toWire()), server);
-            ByteBuffer buf = ByteBuffer.allocate(1024);
+            ByteBuffer buf = ByteBuffer.allocate(4096);
             channel.receive(buf);
             channel.close();
             buf.flip();

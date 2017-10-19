@@ -11,7 +11,11 @@ import java.io.IOException;
 public class Main {
     public static void main(String[] args) throws IOException {
         try {
-            Config.loadConfig();
+            if (args.length == 0) {
+                Config.loadConfig("config.json");
+            } else {
+                Config.loadConfig(args[0]);
+            }
             Banner.print();
             new DNSServer(53).start();
         } catch (Exception e) {

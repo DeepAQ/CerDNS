@@ -15,8 +15,7 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class DNSServer {
     private int port;
-    private ExecutorService forwardWorkers = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    private ExecutorService queryWorkers = Executors.newCachedThreadPool();
+    private ExecutorService workers = Executors.newCachedThreadPool();
     private volatile boolean running = false;
 
     public DNSServer(int port) {
@@ -43,7 +42,7 @@ public class DNSServer {
 
     class ServerThread extends Thread {
         private final DatagramChannel channel;
-        private final ByteBuffer buf = ByteBuffer.allocateDirect(1024);
+        private final ByteBuffer buf = ByteBuffer.allocateDirect(4096);
 
         ServerThread(DatagramChannel channel) {
             super("UDP-Server");
@@ -62,7 +61,7 @@ public class DNSServer {
                         Message message = new Message(buf);
                         if (message.getHeader().getOpcode() == Opcode.QUERY) {
                             // Dispatch
-                            forwardWorkers.execute(new ForwardTask(channel, src, message, queryWorkers));
+                            workers.execute(new ForwardTask(channel, src, message, workers));
                         }
                     }
                 } catch (IOException e) {

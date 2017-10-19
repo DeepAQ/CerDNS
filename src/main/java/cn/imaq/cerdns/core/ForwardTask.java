@@ -29,71 +29,74 @@ public class ForwardTask implements Runnable {
     @Override
     public void run() {
         log.info("Query: " + reqMessage.getQuestion());
-        try {
-            Message result = null;
-            if (reqMessage.getQuestion().getType() == Type.A) {
-                log.info("A type query, use chain");
-                // Use chain
-                List<Config.ChainNode> chain = Config.getChain();
-                List<Future<Message>> futures = new ArrayList<>();
-                Message fallback = null;
-                for (Config.ChainNode node : chain) {
-                    futures.add(queryPool.submit(new QueryTask(reqMessage, node.getServer(), Config.getTimeout())));
-                }
-                for (int i = 0; i < futures.size(); i++) {
-                    Future<Message> future = futures.get(i);
-                    log.info("Getting result from server " + chain.get(i).getServer());
-                    try {
-                        Message respMessage = future.get(Config.getTimeout(), TimeUnit.MILLISECONDS);
-                        if (respMessage == null) {
-                            continue;
-                        }
-                        fallback = respMessage;
-                        Record[] answer = respMessage.getSectionArray(Section.ANSWER);
-                        if (answer != null) {
-                            Config.ChainNode node = chain.get(i);
-                            boolean matches = true;
-                            if (node.getMatchPrefixes() != null) {
-                                for (Record record : answer) {
-                                    if (record.getType() == Type.A) {
-                                        boolean match = false;
-                                        for (CIDR.Prefix prefix : node.getMatchPrefixes()) {
-                                            if (CIDR.match(record.rdataToString(), prefix)) {
-                                                match = true;
-                                                break;
-                                            }
-                                        }
-                                        if (!match) {
-                                            matches = false;
+        Message result = null;
+        if (reqMessage.getQuestion().getType() == Type.A) {
+            log.info("A type query, use chain");
+            // Use chain
+            List<Config.ChainNode> chain = Config.getChain();
+            List<Future<Message>> futures = new ArrayList<>();
+            Message fallback = null;
+            for (Config.ChainNode node : chain) {
+                futures.add(queryPool.submit(new QueryTask(reqMessage, node.getServer(), Config.getTimeout())));
+            }
+            for (int i = 0; i < futures.size(); i++) {
+                Future<Message> future = futures.get(i);
+                log.info("Getting result from server " + chain.get(i).getServer());
+                try {
+                    Message respMessage = future.get(Config.getTimeout(), TimeUnit.MILLISECONDS);
+                    if (respMessage == null) {
+                        continue;
+                    }
+                    fallback = respMessage;
+                    Record[] answer = respMessage.getSectionArray(Section.ANSWER);
+                    if (answer != null) {
+                        Config.ChainNode node = chain.get(i);
+                        boolean matches = true;
+                        if (node.getMatchPrefixes() != null) {
+                            for (Record record : answer) {
+                                if (record.getType() == Type.A) {
+                                    boolean match = false;
+                                    for (CIDR.Prefix prefix : node.getMatchPrefixes()) {
+                                        if (CIDR.match(record.rdataToString(), prefix)) {
+                                            match = true;
                                             break;
                                         }
                                     }
+                                    if (!match) {
+                                        matches = false;
+                                        break;
+                                    }
                                 }
                             }
-                            if (matches) {
-                                log.info("Result matches!");
-                                result = respMessage;
-                                break;
-                            }
                         }
-                    } catch (Exception ignored) {
+                        if (matches) {
+                            log.info("Result matches!");
+                            result = respMessage;
+                            break;
+                        }
                     }
+                } catch (Exception ignored) {
                 }
-                if (result == null) {
-                    log.info("Null result, use fallback instead");
-                    result = fallback;
-                }
-            } else {
-                log.info("Other type query, use default");
-                // Query from default server
-                Future<Message> respFuture = queryPool.submit(new QueryTask(reqMessage, Config.getDefaultServer(), Config.getTimeout()));
+            }
+            if (result == null) {
+                log.info("Null result, use fallback instead");
+                result = fallback;
+            }
+        } else {
+            log.info("Other type query, use default");
+            // Query from default server
+            Future<Message> respFuture = queryPool.submit(new QueryTask(reqMessage, Config.getDefaultServer(), Config.getTimeout()));
+            try {
                 result = respFuture.get(Config.getTimeout(), TimeUnit.MILLISECONDS);
+            } catch (Exception ignored) {
             }
-            if (result != null) {
+        }
+        if (result != null) {
+            try {
                 channel.send(ByteBuffer.wrap(result.toWire()), client);
+            } catch (Exception e) {
+                log.error("Error replying to " + client, e);
             }
-        } catch (Exception e) {
-            log.error("Error forwarding for " + client, e);
         }
     }
 }

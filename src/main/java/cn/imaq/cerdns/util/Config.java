@@ -28,8 +28,8 @@ public class Config {
         return config.getTimeout();
     }
 
-    public static synchronized void loadConfig() throws Exception {
-        config = new Gson().fromJson(new FileReader("config.json"), ConfigModel.class);
+    public static synchronized void loadConfig(String filename) throws Exception {
+        config = new Gson().fromJson(new FileReader(filename), ConfigModel.class);
         // Load address lists
         for (Map.Entry<String, List<String>> cidrs : config.getAddressLists().entrySet()) {
             List<CIDR.Prefix> prefixList = new ArrayList<>();
