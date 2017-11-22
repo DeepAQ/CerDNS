@@ -49,7 +49,7 @@ public class ForwardTask implements Runnable {
                     }
                     fallback = respMessage;
                     Record[] answer = respMessage.getSectionArray(Section.ANSWER);
-                    if (answer != null) {
+                    if (answer != null && answer.length > 0) {
                         Config.ChainNode node = chain.get(i);
                         boolean matches = true;
                         if (node.getMatchPrefixes() != null) {
