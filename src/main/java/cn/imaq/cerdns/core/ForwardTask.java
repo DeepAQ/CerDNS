@@ -55,8 +55,9 @@ public class ForwardTask implements Runnable {
                             for (Record record : answer) {
                                 if (record.getType() == Type.A) {
                                     boolean match = false;
-                                    for (CIDR.Prefix prefix : node.getMatchPrefixes()) {
-                                        if (CIDR.match(record.rdataToString(), prefix)) {
+                                    int ip = CIDR.toInt(record.rdataToString());
+                                    for (byte len = 0; len < 32; len++) {
+                                        if (node.getMatchPrefixes().contains(new CIDR.Prefix(ip >> (32 - len), len))) {
                                             match = true;
                                             break;
                                         }

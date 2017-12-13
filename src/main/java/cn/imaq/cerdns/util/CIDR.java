@@ -1,11 +1,13 @@
 package cn.imaq.cerdns.util;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 
 public class CIDR {
     public static Prefix toPrefix(String cidr) {
         String[] s = cidr.split("/");
-        return new Prefix(toInt(s[0]), Byte.parseByte(s[1]));
+        byte len = Byte.parseByte(s[1]);
+        return new Prefix(toInt(s[0]) >> (32 - len), len);
     }
 
     public static int toInt(String ip) {
@@ -19,9 +21,10 @@ public class CIDR {
 
     public static boolean match(String ip, Prefix prefix) {
         int addr = toInt(ip);
-        return ((addr ^ prefix.addr) >> (32 - prefix.len)) == 0;
+        return ((addr >> (32 - prefix.len)) ^ prefix.addr) == 0;
     }
 
+    @Data
     @AllArgsConstructor
     public static class Prefix {
         private int addr;

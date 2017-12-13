@@ -8,15 +8,12 @@ import lombok.Getter;
 import java.io.FileReader;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Config {
     private static ConfigModel config;
 
-    private static Map<String, List<CIDR.Prefix>> prefixes = new HashMap<>();
+    private static Map<String, Set<CIDR.Prefix>> prefixes = new HashMap<>();
 
     @Getter
     private static SocketAddress defaultServer;
@@ -32,11 +29,11 @@ public class Config {
         config = new Gson().fromJson(new FileReader(filename), ConfigModel.class);
         // Load address lists
         for (Map.Entry<String, List<String>> cidrs : config.getAddressLists().entrySet()) {
-            List<CIDR.Prefix> prefixList = new ArrayList<>();
+            Set<CIDR.Prefix> prefixSet = new HashSet<>();
             for (String cidr : cidrs.getValue()) {
-                prefixList.add(CIDR.toPrefix(cidr));
+                prefixSet.add(CIDR.toPrefix(cidr));
             }
-            prefixes.put(cidrs.getKey(), prefixList);
+            prefixes.put(cidrs.getKey(), prefixSet);
         }
         // Load default server
         defaultServer = new InetSocketAddress(config.getDefaultServer().getServer(), config.getDefaultServer().getPort());
@@ -54,6 +51,6 @@ public class Config {
     public static class ChainNode {
         private SocketAddress server;
 
-        private List<CIDR.Prefix> matchPrefixes;
+        private Set<CIDR.Prefix> matchPrefixes;
     }
 }
