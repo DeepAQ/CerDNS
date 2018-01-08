@@ -19,6 +19,9 @@ public class Config {
     private static SocketAddress defaultServer;
 
     @Getter
+    private static SocketAddress v6Server;
+
+    @Getter
     private static List<ChainNode> chain = new ArrayList<>();
 
     public static int getTimeout() {
@@ -37,6 +40,12 @@ public class Config {
         }
         // Load default server
         defaultServer = new InetSocketAddress(config.getDefaultServer().getServer(), config.getDefaultServer().getPort());
+        // Load v6 server
+        if (config.getV6Server() != null) {
+            v6Server = new InetSocketAddress(config.getV6Server().getServer(), config.getV6Server().getPort());
+        } else {
+            v6Server = defaultServer;
+        }
         // Load chain nodes
         for (ConfigModel.Server server : config.getChain()) {
             chain.add(new ChainNode(

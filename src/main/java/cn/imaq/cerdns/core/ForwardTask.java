@@ -83,9 +83,16 @@ public class ForwardTask implements Runnable {
                 result = fallback;
             }
         } else {
-            log.info("Other type query, use default");
-            // Query from default server
-            Future<Message> respFuture = queryPool.submit(new QueryTask(reqMessage, Config.getDefaultServer(), Config.getTimeout()));
+            SocketAddress server;
+            if (reqMessage.getQuestion().getType() == Type.AAAA) {
+                log.info("AAAA type query, use v6 server");
+                server = Config.getV6Server();
+            } else {
+                log.info("Other type query, use default");
+                server = Config.getDefaultServer();
+            }
+            // Query from server
+            Future<Message> respFuture = queryPool.submit(new QueryTask(reqMessage, server, Config.getTimeout()));
             try {
                 result = respFuture.get();
             } catch (Exception ignored) {

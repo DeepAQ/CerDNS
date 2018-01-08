@@ -1,8 +1,12 @@
 {
-  "timeout": 1000,
+  "timeout": 1500,
   "defaultServer": {
-    "server": "210.28.129.251",
+    "server": "114.114.114.114",
     "port": 53
+  },
+  "v6Server": {
+    "server": "10.0.0.98",
+    "port": 5300
   },
   "chain": [
     {

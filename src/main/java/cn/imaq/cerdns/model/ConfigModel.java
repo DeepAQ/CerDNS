@@ -12,6 +12,8 @@ public class ConfigModel {
 
     private Server defaultServer;
 
+    private Server v6Server;
+
     private List<Server> chain;
 
     private Map<String, List<String>> addressLists = new HashMap<>();
