@@ -5,12 +5,12 @@
     "port": 53
   },
   "v6Server": {
-    "server": "10.0.0.98",
-    "port": 5300
+    "server": "210.28.129.252",
+    "port": 53
   },
   "chain": [
     {
-      "server": "210.28.129.251",
+      "server": "210.28.129.252",
       "port": 53,
       "matchList": "nju"
     },
@@ -20,8 +20,8 @@
       "matchList": "chinaip"
     },
     {
-      "server": "10.0.0.98",
-      "port": 5300,
+      "server": "8.8.8.8",
+      "port": 53,
       "matchList": ""
     }
   ],
