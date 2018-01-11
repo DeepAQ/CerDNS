@@ -20,7 +20,6 @@ import java.nio.channels.Selector;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 
 @Slf4j
 @AllArgsConstructor
@@ -57,7 +56,6 @@ public class ForwardTask implements Runnable {
                 Message[] responses = new Message[size];
                 ByteBuffer byteBuf = ByteBuffer.allocate(4096);
                 int currentIndex = 0, lastIndex = 0;
-                boolean matched = false;
                 while (true) {
                     int count = selector.select(endTime - System.currentTimeMillis());
                     if (count <= 0) {
@@ -81,7 +79,7 @@ public class ForwardTask implements Runnable {
                         }
                     }
                     boolean matches = false;
-                    while (responses[currentIndex] != null && currentIndex < size) {
+                    while (currentIndex < size && responses[currentIndex] != null) {
                         Message respMessage = responses[currentIndex];
                         Record[] answer = respMessage.getSectionArray(Section.ANSWER);
                         if (answer != null && answer.length > 0) {
